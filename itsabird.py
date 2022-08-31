@@ -54,12 +54,10 @@ def remember(memory, the_list, count):
     for k in memory.keys():
         # roll the oldest value off the list and add the new value
         v = memory[k]
-        if v is None:
-            continue
         if k in the_list:
             v = v[1:].append(1)
         else:
-            v = v[1:].append[0]
+            v = v[1:].append(0)
         s = sum(v)
         memory[k] = v
 
@@ -91,6 +89,9 @@ def api_once(auth, params):
     states = js['states']
     now = int(js['time'])
     out = []
+
+    if states is None:
+        return []
 
     for state in states:
         # See https://openskynetwork.github.io/opensky-api/rest.html
