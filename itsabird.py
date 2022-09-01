@@ -53,17 +53,18 @@ def remember(memory, the_list, count):
     # memory is a dict that contains a list of 12 ints
     for k in memory.keys():
         # roll the oldest value off the list and add the new value
-        v = memory[k]
+        v = memory[k][1:]
         if k in the_list:
-            v = v[1:].append(1)
+            v.append(1)
         else:
-            v = v[1:].append(0)
+            v.append(0)
         s = sum(v)
         memory[k] = v
 
         # find keys where we are over the limit
         if s >= count:
             out.append(k)
+            #memory[k] = [0,0,0,0,0,0,0,0,0,0,0,0]
             to_delete.append(k)
 
         # forget things we haven't seen in an hour
@@ -82,7 +83,9 @@ def remember(memory, the_list, count):
     return memory, out
 
 
+states_seen = 0
 def api_once(auth, params):
+    global states_seen
     resp = requests.get('https://opensky-network.org/api/states/all',
                         auth=auth, params=params)
     js = json.loads(resp.text)
@@ -104,6 +107,7 @@ def api_once(auth, params):
         icao_24 = state[0]
         last_contact = int(state[4])
         on_ground = state[8]
+        states_seen = states_seen + 1
 
         # ignore things on the ground
         if on_ground:
@@ -120,6 +124,7 @@ def api_once(auth, params):
 
 
 def main():
+    global states_seen
     auth, params, count, out = get_args()
     memory = {}
 
@@ -133,7 +138,8 @@ def main():
                 out.flush()
             time.sleep(300)
     except KeyboardInterrupt:
-        out.close()
+        out.flush()
+        print('Saw {} state records in total.'.format(states_seen))
 
 
 if __name__ == '__main__':
