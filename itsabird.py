@@ -64,7 +64,6 @@ def remember(memory, the_list, count):
         # find keys where we are over the limit
         if s >= count:
             out.append(k)
-            #memory[k] = [0,0,0,0,0,0,0,0,0,0,0,0]
             to_delete.append(k)
 
         # forget things we haven't seen in an hour
@@ -83,12 +82,38 @@ def remember(memory, the_list, count):
     return memory, out
 
 
+# Aircraft category.
+cat_desc = ["No information at all", "No ADS-B Emitter Category Information",
+            "Light (< 15500 lbs)", "Small (15500 to 75000 lbs)",
+            "Large (75000 to 300000 lbs)",
+            "High Vortex Large (aircraft such as B-757)",
+            "Heavy (> 300000 lbs)",
+            "High Performance (> 5g acceleration and 400 kts)",
+            "Rotorcraft", "Glider / sailplane", "Lighter-than-air",
+            "Parachutist / Skydiver", "Ultralight / hang-glider / paraglider",
+            "Reserved", "Unmanned Aerial Vehicle",
+            "Space / Trans-atmospheric vehicle",
+            "Surface Vehicle – Emergency Vehicle",
+            "Surface Vehicle – Service Vehicle",
+            "Point Obstacle (includes tethered balloons)", "Cluster Obstacle",
+            "Line Obstacle"]
+
+
 states_seen = 0
 def api_once(auth, params):
-    global states_seen
-    resp = requests.get('https://opensky-network.org/api/states/all',
-                        auth=auth, params=params)
-    js = json.loads(resp.text)
+    global states_seen, cat_desc
+
+    try:
+        resp = requests.get('https://opensky-network.org/api/states/all',
+                            auth=auth, params=params)
+        js = json.loads(resp.text)
+    except:
+        if resp is None:
+            print('API response is None')
+        else:
+            print(resp.text)
+        return []
+
     states = js['states']
     now = int(js['time'])
     out = []
@@ -107,7 +132,12 @@ def api_once(auth, params):
         icao_24 = state[0]
         last_contact = int(state[4])
         on_ground = state[8]
+        cat = state[17]
         states_seen = states_seen + 1
+
+        # call out the weird
+        if cat in [11,14,15]:
+            print('Neat, {} is a {}'.format(icao_24, cat_desc[cat]))
 
         # ignore things on the ground
         if on_ground:
