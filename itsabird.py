@@ -132,7 +132,10 @@ def api_once(auth, params):
         icao_24 = state[0]
         last_contact = int(state[4])
         on_ground = state[8]
-        cat = state[17]
+        if len(state) > 17:  # have seen states without this in the wild
+            cat = state[17]
+        else:
+            cat = 0
         states_seen = states_seen + 1
 
         # call out the weird
